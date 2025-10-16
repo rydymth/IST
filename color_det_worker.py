@@ -152,3 +152,38 @@ class SmokeDetectorWorker(BaseWorker):
 > Overload resolution failed:
 >  - src2 is not a numpy array, neither a scalar
 >  - Expected Ptr<cv::UMat> for argument 'src2'
+
+
+#############
+
+
+# 1️⃣ Background motion detection
+fgmask = self.bg_subtractor.apply(roi)
+if fgmask is None:
+    log(f"[{self.name}] Warning: fgmask is None for ROI")
+    return False, None
+fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+
+# 2️⃣ Color deviation (LAB)
+lab = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
+L, A, B = cv2.split(lab)
+color_var = cv2.addWeighted(cv2.absdiff(A, np.median(A)), 0.5,
+                            cv2.absdiff(B, np.median(B)), 0.5, 0)
+_, color_mask = cv2.threshold(color_var, self.color_dev_threshold, 255, cv2.THRESH_BINARY)
+
+# 3️⃣ Texture softness
+gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
+blur_mask = np.zeros_like(gray, dtype=np.uint8)
+if blur_score < self.blur_threshold:
+    blur_mask[:] = 255  # Mark entire ROI as "blurry" (potential smoke)
+
+# 4️⃣ Ensure all masks are uint8
+fgmask = fgmask.astype(np.uint8)
+color_mask = color_mask.astype(np.uint8)
+blur_mask = blur_mask.astype(np.uint8)
+
+# 5️⃣ Combine all masks safely
+combined = cv2.bitwise_and(fgmask, color_mask)
+combined = cv2.bitwise_and(combined, blur_mask)
+
