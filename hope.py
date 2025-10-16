@@ -183,3 +183,13 @@ class SmokeDetectorWorker(BaseWorker):
         self.state.frame_store.update(frame_id, smokes=smokes)
         self.state.smoke_queue.put({"frame_id": frame_id})
         log(f"[{self.name}] Frame {frame_id} processed — {len(smokes)} smokes detected")
+
+
+# which one?
+
+[SmokeDetectorWorker] ROI 4f6a073f-b08a-4608-a72e-7abd8346b729-0: motion=1.000, ratio=0.000, upward=0.000, blur=166.3, detected=False
+[SmokeDetectorWorker] ROI 4f6a073f-b08a-4608-a72e-7abd8346b729-1: motion=1.000, ratio=0.000, upward=0.000, blur=516.7, detected=False
+[SmokeDetectorWorker] ROI 4f6a073f-b08a-4608-a72e-7abd8346b729-2: motion=1.000, ratio=0.000, upward=0.000, blur=108.0, detected=False
+[SmokeDetectorWorker] ROI 4f6a073f-b08a-4608-a72e-7abd8346b729-3: motion=1.000, ratio=0.000, upward=0.000, blur=726.6, detected=False
+[SmokeDetectorWorker] ROI 4f6a073f-b08a-4608-a72e-7abd8346b729-4: motion=1.000, ratio=0.000, upward=0.000, blur=106.8, detected=False
+[SmokeDetectorWorker] ROI 4f6a073f-b08a-4608-a72e-7abd8346b729-5: motion=1.000, ratio=0.000, upward=0.000, blur=1482.3, detected=False
