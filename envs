@@ -1,0 +1,23 @@
+DB_DRIVER=ODBC Driver 18 for SQL Server
+DB_SERVER=localhost
+DB_PORT=1433
+DB_USER=sa
+DB_PASSWORD=Rudr432169
+DB_NAME=VisionEmissionDetectionDB
+
+# ========================
+# Email Configuration
+# ========================
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=gssplspt@gmail.com
+SMTP_PASSWORD=gnwf bqqs xbhh ghxt
+
+# ========================
+# SMS Gateway
+# ========================
+SMS_API_URL=https://www.smsgatewayhub.com/api/mt/SendSMS
+SMS_API_KEY=X28B07dJNk6SKqHWbaeoVw
+SMS_SENDER_ID=TESTIN
+SMS_ENTITY_ID=1301164690579453820
+SMS_TEMPLATE_ID=1307175558193786840
