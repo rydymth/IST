@@ -143,3 +143,12 @@ class SmokeDetectorWorker(BaseWorker):
         # Always push forward, even if no smokes
         self.state.smoke_queue.put({"frame_id": frame_id})
         log(f"[{self.name}] Frame {frame_id} processed — {len(smokes)} active smokes")
+
+
+
+
+########
+[SmokeDetectorWorker] Error: OpenCV(4.8.0) :-1: error: (-5:Bad argument) in function 'bitwise_and'
+> Overload resolution failed:
+>  - src2 is not a numpy array, neither a scalar
+>  - Expected Ptr<cv::UMat> for argument 'src2'
