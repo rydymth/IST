@@ -1,0 +1,76 @@
+import asyncio
+from datetime import datetime
+from app.state.state import AppState
+from app.tasks.base_workers import BaseWorker
+from app.api.schemas.queue_schemas import DetectionQueueItem, EventQueueItem, YOLOChimney
+from app.utils.logger import log
+from app.core.ws_manager import manager
+
+class CameraMovementWorker(BaseWorker):
+    """
+    Stable version — uses calibrated chimneys only (no YOLO inference).
+    Ensures consistent chimney positions and emits CAMERA_STATE events.
+    """
+
+    def __init__(self, state: AppState):
+        super().__init__(name="CameraMovementWorker", input_queue=state.video_queue)
+        self.state = state
+        self.last_broadcast_time = 0
+        self.broadcast_interval = 2  # seconds between status updates
+
+    def process(self, video_item):
+        frame_id = getattr(video_item, "frame_id", None)
+        if not frame_id:
+            return
+
+        calibrated = self.state.calibrated_chimneys
+        if not calibrated:
+            log(f"[{self.name}] ❌ No calibrated chimneys available — skipping frame {frame_id}")
+            event = EventQueueItem(
+                frame_id=frame_id,
+                chimneys_found=False,
+                camera_moved=False,
+                warning="No calibrated chimneys configured."
+            )
+            self.state.event_queue.put(event.model_dump())
+            return
+
+        # Build YOLOChimney-style list from calibrated chimneys
+        chimneys = [
+            YOLOChimney(
+                bbox=cal.get("box"),
+                confidence=1.0,
+                label=cal.get("Name") or f"CH-{idx+1}"
+            )
+            for idx, cal in enumerate(calibrated.values())
+        ]
+
+        # Update frame store and downstream queues
+        self.state.frame_store.update(frame_id, chimneys=chimneys)
+        detection_item = DetectionQueueItem(
+            frame_id=frame_id, chimneys=chimneys, rois=[], detections={}
+        )
+        self.state.detection_queue.put(detection_item)
+
+        # Emit stable camera event
+        event_payload = {
+            "event_type": "CAMERA_STATE",
+            "frame_id": frame_id,
+            "timestamp": datetime.now().isoformat(),
+            "payload": {
+                "camera_moved": False,
+                "chimneys_found": True,
+                "alignment_warning": "Camera stable (Calibrated mode).",
+                "total_chimneys": len(chimneys)
+            }
+        }
+
+        self.state.event_queue.put(event_payload)
+
+        # Broadcast event via WebSocket periodically
+        now = datetime.now().timestamp()
+        if now - self.last_broadcast_time >= self.broadcast_interval:
+            asyncio.run(manager._broadcast_async(event_payload))
+            self.last_broadcast_time = now
+
+        log(f"[{self.name}] ✅ Frame {frame_id}: Using calibrated chimneys ({len(chimneys)} found)")
