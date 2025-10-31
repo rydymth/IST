@@ -1,0 +1,3 @@
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"<path>\Monitor-InternetAndDocker.ps1`""
+$trigger = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "InternetDockerMonitor" -Description "Monitors internet and restarts Docker container on failure"
